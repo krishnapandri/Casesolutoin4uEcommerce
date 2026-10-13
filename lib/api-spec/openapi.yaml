@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CaseSolution4U storefront and staff API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: storefront
+    description: Public catalog and store content
+  - name: admin
+    description: Authorized staff operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,450 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /home-content:
+    get:
+      operationId: getHomeContent
+      tags: [storefront]
+      summary: Get homepage content
+      responses:
+        "200":
+          description: Public promotion, verified trust copy, and homepage merchandising
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeContent"
+  /collections:
+    get:
+      operationId: listCollections
+      tags: [storefront]
+      summary: List published collections
+      responses:
+        "200":
+          description: Published collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+  /devices:
+    get:
+      operationId: listDevices
+      tags: [storefront]
+      summary: List device brands and models available in the catalog
+      responses:
+        "200":
+          description: Available device compatibility options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeviceOption"
+  /products:
+    get:
+      operationId: listProducts
+      tags: [storefront]
+      summary: Search and filter published products
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: collection
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: brand
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: model
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: featured
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 60
+      responses:
+        "200":
+          description: Matching products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+  /products/{slug}:
+    get:
+      operationId: getProduct
+      tags: [storefront]
+      summary: Get a published product
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+  /newsletter:
+    post:
+      operationId: subscribeNewsletter
+      tags: [storefront]
+      summary: Subscribe an email address to store updates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewsletterInput"
+      responses:
+        "201":
+          description: Subscription saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsletterResult"
+        "400":
+          description: Invalid email address
+  /admin/summary:
+    get:
+      operationId: getAdminSummary
+      tags: [admin]
+      summary: Get store operations summary
+      responses:
+        "200":
+          description: Product, inventory, and order totals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSummary"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+  /admin/products:
+    get:
+      operationId: listAdminProducts
+      tags: [admin]
+      summary: List all products for staff
+      responses:
+        "200":
+          description: All catalog products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminProduct"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+    post:
+      operationId: createProduct
+      tags: [admin]
+      summary: Create a catalog product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProduct"
+        "400":
+          description: Invalid product data
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+  /admin/products/{id}:
+    patch:
+      operationId: updateProduct
+      tags: [admin]
+      summary: Update a catalog product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProduct"
+        "400":
+          description: Invalid product data
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+        "404":
+          description: Product not found
+    delete:
+      operationId: deleteProduct
+      tags: [admin]
+      summary: Delete a catalog product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Product deleted
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+        "404":
+          description: Product not found
+  /admin/collections:
+    get:
+      operationId: listAdminCollections
+      tags: [admin]
+      summary: List all collections for staff
+      responses:
+        "200":
+          description: All collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminCollection"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+    post:
+      operationId: createCollection
+      tags: [admin]
+      summary: Create a collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionInput"
+      responses:
+        "201":
+          description: Collection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCollection"
+        "400":
+          description: Invalid collection data
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+  /admin/collections/{id}:
+    patch:
+      operationId: updateCollection
+      tags: [admin]
+      summary: Update a collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionUpdate"
+      responses:
+        "200":
+          description: Updated collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCollection"
+        "400":
+          description: Invalid collection data
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+        "404":
+          description: Collection not found
+    delete:
+      operationId: deleteCollection
+      tags: [admin]
+      summary: Delete a collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Collection deleted
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+        "404":
+          description: Collection not found
+  /admin/home-content:
+    get:
+      operationId: getAdminHomeContent
+      tags: [admin]
+      summary: Get editable homepage content
+      responses:
+        "200":
+          description: Current homepage content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeContent"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+    put:
+      operationId: updateHomeContent
+      tags: [admin]
+      summary: Update the announcement and trust copy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HomeContentInput"
+      responses:
+        "200":
+          description: Updated homepage content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeContent"
+        "400":
+          description: Invalid homepage content
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+  /admin/orders:
+    get:
+      operationId: listAdminOrders
+      tags: [admin]
+      summary: List store orders
+      responses:
+        "200":
+          description: Store orders, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoreOrder"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+    post:
+      operationId: createAdminOrder
+      tags: [admin]
+      summary: Record an order received outside the website
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Order recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrder"
+        "400":
+          description: Invalid order data
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+  /admin/orders/{id}:
+    patch:
+      operationId: updateOrder
+      tags: [admin]
+      summary: Update an order status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderUpdate"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOrder"
+        "400":
+          description: Invalid order data
+        "401":
+          description: Sign-in required
+        "403":
+          description: Staff access required
+        "404":
+          description: Order not found
 components:
   schemas:
     HealthStatus:
@@ -33,4 +481,206 @@ components:
           type: string
       required:
         - status
+    Product:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        category: { type: string }
+        pricePaise: { type: integer }
+        compareAtPricePaise: { type: ["integer", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        imageAlt: { type: ["string", "null"] }
+        compatibility:
+          type: array
+          items: { type: string }
+        stockQuantity: { type: integer }
+        inStock: { type: boolean }
+        featured: { type: boolean }
+        collections:
+          type: array
+          items:
+            $ref: "#/components/schemas/CollectionRef"
+      required: [id, name, slug, description, category, pricePaise, compareAtPricePaise, imageUrl, imageAlt, compatibility, stockQuantity, inStock, featured, collections]
+    AdminProduct:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            published: { type: boolean }
+            updatedAt: { type: string, format: date-time }
+          required: [published, updatedAt]
+    ProductInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 140 }
+        slug: { type: string, minLength: 1, maxLength: 160 }
+        description: { type: ["string", "null"] }
+        category: { type: string, minLength: 1, maxLength: 80 }
+        pricePaise: { type: integer, minimum: 0 }
+        compareAtPricePaise: { type: ["integer", "null"], minimum: 0 }
+        imageUrl: { type: ["string", "null"] }
+        imageAlt: { type: ["string", "null"] }
+        compatibility:
+          type: array
+          items: { type: string }
+        stockQuantity: { type: integer, minimum: 0 }
+        featured: { type: boolean }
+        published: { type: boolean }
+        collectionIds:
+          type: array
+          items: { type: string, format: uuid }
+      required: [name, slug, description, category, pricePaise, compareAtPricePaise, imageUrl, imageAlt, compatibility, stockQuantity, featured, published, collectionIds]
+    ProductUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 140 }
+        slug: { type: string, minLength: 1, maxLength: 160 }
+        description: { type: ["string", "null"] }
+        category: { type: string, minLength: 1, maxLength: 80 }
+        pricePaise: { type: integer, minimum: 0 }
+        compareAtPricePaise: { type: ["integer", "null"], minimum: 0 }
+        imageUrl: { type: ["string", "null"] }
+        imageAlt: { type: ["string", "null"] }
+        compatibility:
+          type: array
+          items: { type: string }
+        stockQuantity: { type: integer, minimum: 0 }
+        featured: { type: boolean }
+        published: { type: boolean }
+        collectionIds:
+          type: array
+          items: { type: string, format: uuid }
+    Collection:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        imageAlt: { type: ["string", "null"] }
+        productCount: { type: integer }
+      required: [id, name, slug, description, imageUrl, imageAlt, productCount]
+    AdminCollection:
+      allOf:
+        - $ref: "#/components/schemas/Collection"
+        - type: object
+          properties:
+            published: { type: boolean }
+          required: [published]
+    CollectionRef:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+      required: [id, name, slug]
+    CollectionInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        slug: { type: string, minLength: 1, maxLength: 140 }
+        description: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        imageAlt: { type: ["string", "null"] }
+        published: { type: boolean }
+      required: [name, slug, description, imageUrl, imageAlt, published]
+    CollectionUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        slug: { type: string, minLength: 1, maxLength: 140 }
+        description: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        imageAlt: { type: ["string", "null"] }
+        published: { type: boolean }
+    DeviceOption:
+      type: object
+      properties:
+        brand: { type: string }
+        model: { type: string }
+        productCount: { type: integer }
+      required: [brand, model, productCount]
+    HomeContent:
+      type: object
+      properties:
+        announcement: { type: ["string", "null"] }
+        shippingPolicy: { type: ["string", "null"] }
+        returnsPolicy: { type: ["string", "null"] }
+        supportEmail: { type: ["string", "null"], format: email }
+        trustItems:
+          type: array
+          items: { type: string }
+      required: [announcement, shippingPolicy, returnsPolicy, supportEmail, trustItems]
+    HomeContentInput:
+      type: object
+      properties:
+        announcement: { type: ["string", "null"] }
+        shippingPolicy: { type: ["string", "null"] }
+        returnsPolicy: { type: ["string", "null"] }
+        supportEmail: { type: ["string", "null"], format: email }
+        trustItems:
+          type: array
+          items: { type: string, maxLength: 100 }
+      required: [announcement, shippingPolicy, returnsPolicy, supportEmail, trustItems]
+    NewsletterInput:
+      type: object
+      properties:
+        email: { type: string, format: email, maxLength: 320 }
+      required: [email]
+    NewsletterResult:
+      type: object
+      properties:
+        subscribed: { type: boolean }
+        message: { type: string }
+      required: [subscribed, message]
+    AdminSummary:
+      type: object
+      properties:
+        productCount: { type: integer }
+        lowStockCount: { type: integer }
+        orderCount: { type: integer }
+        openOrderCount: { type: integer }
+      required: [productCount, lowStockCount, orderCount, openOrderCount]
+    StoreOrder:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        orderNumber: { type: string }
+        customerName: { type: string }
+        customerEmail: { type: string }
+        customerPhone: { type: ["string", "null"] }
+        shippingAddress: { type: string }
+        status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
+        amountPaise: { type: integer }
+        itemCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+      required: [id, orderNumber, customerName, customerEmail, customerPhone, shippingAddress, status, amountPaise, itemCount, createdAt]
+    OrderLineInput:
+      type: object
+      properties:
+        productId: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1, maximum: 99 }
+      required: [productId, quantity]
+    OrderInput:
+      type: object
+      properties:
+        customerName: { type: string, minLength: 1, maxLength: 140 }
+        customerEmail: { type: string, format: email, maxLength: 320 }
+        customerPhone: { type: ["string", "null"], maxLength: 40 }
+        shippingAddress: { type: string, minLength: 1, maxLength: 1000 }
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/OrderLineInput"
+      required: [customerName, customerEmail, customerPhone, shippingAddress, items]
+    OrderUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, processing, shipped, delivered, cancelled] }
+      required: [status]
 

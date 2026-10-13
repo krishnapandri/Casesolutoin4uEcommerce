@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CaseSolution4U"
+description = "A responsive Indian ecommerce storefront for discovering phone cases and accessories by device and collection, backed by a real product catalog and store policies."
+version = "1.0.0"
+id = "artifacts/casesolution4u"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22023
+
+[services.development]
+run = "pnpm --filter @workspace/casesolution4u run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/casesolution4u", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/casesolution4u/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22023"
+BASE_PATH = "/"

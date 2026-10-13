@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48" role="img" aria-label="CaseSolution4U">
+  <rect x="1" y="5" width="38" height="38" rx="13" fill="#b87586"/>
+  <path d="M25.1 17.4a8.8 8.8 0 1 0 .1 13.1l-3.2-3.1a4.4 4.4 0 1 1 0-6.8l3.1-3.2Z" fill="#fffdfa"/>
+  <path d="M27 13.2h7.7v3.6h-2v18h-3.8v-18H27v-3.6Z" fill="#f6dfdc"/>
+  <text x="50" y="30" font-family="DM Sans, sans-serif" font-size="18" font-weight="700" fill="#37373c">case</text>
+  <text x="91" y="30" font-family="DM Sans, sans-serif" font-size="18" font-weight="500" fill="#37373c">solution</text>
+  <text x="164" y="30" font-family="DM Sans, sans-serif" font-size="15" font-weight="700" fill="#a86376">4U</text>
+</svg>
