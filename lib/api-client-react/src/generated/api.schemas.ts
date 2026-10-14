@@ -179,27 +179,54 @@ export interface DeviceOption {
 }
 
 export interface HomeContent {
-  /** @nullable */
+  /**
+     * @maxLength 160
+     * @nullable
+     */
   announcement: string | null;
-  /** @nullable */
+  /**
+     * @maxLength 10000
+     * @nullable
+     */
   shippingPolicy: string | null;
-  /** @nullable */
+  /**
+     * @maxLength 10000
+     * @nullable
+     */
   returnsPolicy: string | null;
-  /** @nullable */
+  /**
+     * @maxLength 254
+     * @nullable
+     */
   supportEmail: string | null;
   trustItems: string[];
 }
 
 export interface HomeContentInput {
-  /** @nullable */
+  /**
+     * @maxLength 160
+     * @nullable
+     */
   announcement: string | null;
-  /** @nullable */
+  /**
+     * @maxLength 10000
+     * @nullable
+     */
   shippingPolicy: string | null;
-  /** @nullable */
+  /**
+     * @maxLength 10000
+     * @nullable
+     */
   returnsPolicy: string | null;
-  /** @nullable */
+  /**
+     * @maxLength 254
+     * @nullable
+     */
   supportEmail: string | null;
-  /** @items.maxLength 100 */
+  /**
+     * @maxItems 8
+     * @items.maxLength 100
+     */
   trustItems: string[];
 }
 

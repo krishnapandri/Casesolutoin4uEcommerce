@@ -607,10 +607,10 @@ components:
     HomeContent:
       type: object
       properties:
-        announcement: { type: ["string", "null"] }
-        shippingPolicy: { type: ["string", "null"] }
-        returnsPolicy: { type: ["string", "null"] }
-        supportEmail: { type: ["string", "null"], format: email }
+        announcement: { type: ["string", "null"], maxLength: 160 }
+        shippingPolicy: { type: ["string", "null"], maxLength: 10000 }
+        returnsPolicy: { type: ["string", "null"], maxLength: 10000 }
+        supportEmail: { type: ["string", "null"], format: email, maxLength: 254 }
         trustItems:
           type: array
           items: { type: string }
@@ -618,12 +618,13 @@ components:
     HomeContentInput:
       type: object
       properties:
-        announcement: { type: ["string", "null"] }
-        shippingPolicy: { type: ["string", "null"] }
-        returnsPolicy: { type: ["string", "null"] }
-        supportEmail: { type: ["string", "null"], format: email }
+        announcement: { type: ["string", "null"], maxLength: 160 }
+        shippingPolicy: { type: ["string", "null"], maxLength: 10000 }
+        returnsPolicy: { type: ["string", "null"], maxLength: 10000 }
+        supportEmail: { type: ["string", "null"], format: email, maxLength: 254 }
         trustItems:
           type: array
+          maxItems: 8
           items: { type: string, maxLength: 100 }
       required: [announcement, shippingPolicy, returnsPolicy, supportEmail, trustItems]
     NewsletterInput:

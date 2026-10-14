@@ -20,11 +20,21 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get homepage content
  */
+export const getHomeContentResponseAnnouncementMax = 160;
+
+export const getHomeContentResponseShippingPolicyMax = 10000;
+
+export const getHomeContentResponseReturnsPolicyMax = 10000;
+
+export const getHomeContentResponseSupportEmailMax = 254;
+
+
+
 export const GetHomeContentResponse = zod.object({
-  "announcement": zod.string().nullable(),
-  "shippingPolicy": zod.string().nullable(),
-  "returnsPolicy": zod.string().nullable(),
-  "supportEmail": zod.string().email().nullable(),
+  "announcement": zod.string().max(getHomeContentResponseAnnouncementMax).nullable(),
+  "shippingPolicy": zod.string().max(getHomeContentResponseShippingPolicyMax).nullable(),
+  "returnsPolicy": zod.string().max(getHomeContentResponseReturnsPolicyMax).nullable(),
+  "supportEmail": zod.string().email().max(getHomeContentResponseSupportEmailMax).nullable(),
   "trustItems": zod.array(zod.string())
 })
 
@@ -406,11 +416,21 @@ export const DeleteCollectionResponse = zod.void()
 /**
  * @summary Get editable homepage content
  */
+export const getAdminHomeContentResponseAnnouncementMax = 160;
+
+export const getAdminHomeContentResponseShippingPolicyMax = 10000;
+
+export const getAdminHomeContentResponseReturnsPolicyMax = 10000;
+
+export const getAdminHomeContentResponseSupportEmailMax = 254;
+
+
+
 export const GetAdminHomeContentResponse = zod.object({
-  "announcement": zod.string().nullable(),
-  "shippingPolicy": zod.string().nullable(),
-  "returnsPolicy": zod.string().nullable(),
-  "supportEmail": zod.string().email().nullable(),
+  "announcement": zod.string().max(getAdminHomeContentResponseAnnouncementMax).nullable(),
+  "shippingPolicy": zod.string().max(getAdminHomeContentResponseShippingPolicyMax).nullable(),
+  "returnsPolicy": zod.string().max(getAdminHomeContentResponseReturnsPolicyMax).nullable(),
+  "supportEmail": zod.string().email().max(getAdminHomeContentResponseSupportEmailMax).nullable(),
   "trustItems": zod.array(zod.string())
 })
 
@@ -418,23 +438,43 @@ export const GetAdminHomeContentResponse = zod.object({
 /**
  * @summary Update the announcement and trust copy
  */
+export const updateHomeContentBodyAnnouncementMax = 160;
+
+export const updateHomeContentBodyShippingPolicyMax = 10000;
+
+export const updateHomeContentBodyReturnsPolicyMax = 10000;
+
+export const updateHomeContentBodySupportEmailMax = 254;
+
 export const updateHomeContentBodyTrustItemsItemMax = 100;
+
+export const updateHomeContentBodyTrustItemsMax = 8;
 
 
 
 export const UpdateHomeContentBody = zod.object({
-  "announcement": zod.string().nullable(),
-  "shippingPolicy": zod.string().nullable(),
-  "returnsPolicy": zod.string().nullable(),
-  "supportEmail": zod.string().email().nullable(),
-  "trustItems": zod.array(zod.string().max(updateHomeContentBodyTrustItemsItemMax))
+  "announcement": zod.string().max(updateHomeContentBodyAnnouncementMax).nullable(),
+  "shippingPolicy": zod.string().max(updateHomeContentBodyShippingPolicyMax).nullable(),
+  "returnsPolicy": zod.string().max(updateHomeContentBodyReturnsPolicyMax).nullable(),
+  "supportEmail": zod.string().email().max(updateHomeContentBodySupportEmailMax).nullable(),
+  "trustItems": zod.array(zod.string().max(updateHomeContentBodyTrustItemsItemMax)).max(updateHomeContentBodyTrustItemsMax)
 })
 
+export const updateHomeContentResponseAnnouncementMax = 160;
+
+export const updateHomeContentResponseShippingPolicyMax = 10000;
+
+export const updateHomeContentResponseReturnsPolicyMax = 10000;
+
+export const updateHomeContentResponseSupportEmailMax = 254;
+
+
+
 export const UpdateHomeContentResponse = zod.object({
-  "announcement": zod.string().nullable(),
-  "shippingPolicy": zod.string().nullable(),
-  "returnsPolicy": zod.string().nullable(),
-  "supportEmail": zod.string().email().nullable(),
+  "announcement": zod.string().max(updateHomeContentResponseAnnouncementMax).nullable(),
+  "shippingPolicy": zod.string().max(updateHomeContentResponseShippingPolicyMax).nullable(),
+  "returnsPolicy": zod.string().max(updateHomeContentResponseReturnsPolicyMax).nullable(),
+  "supportEmail": zod.string().email().max(updateHomeContentResponseSupportEmailMax).nullable(),
   "trustItems": zod.array(zod.string())
 })
 

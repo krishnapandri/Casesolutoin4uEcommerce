@@ -1,6 +1,6 @@
-# [Project name]
+# CaseSolution4U
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A product-catalogue storefront for CaseSolution4U phone cases and accessories, with a staff-only catalogue and content editor.
 
 ## Run & Operate
 
@@ -22,23 +22,30 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- Storefront app: `artifacts/casesolution4u`
+- API and staff routes: `artifacts/api-server`
+- Database schema: `lib/db/src/schema/store.ts`
+- API contract: `lib/api-spec/openapi.yaml`; regenerate clients and validators with the command above.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Keep catalogue pricing, stock, compatibility, homepage policies, and support contact sourced from the database; do not add sample products or unverified store claims.
+- Online checkout and payment are not enabled. Staff-recorded orders represent orders received outside this website.
+- Staff operations require both Clerk sign-in and an explicit server-side staff email allowlist.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+The public site supports product and collection browsing, device compatibility filtering, product search, a locally saved bag, and newsletter signup. Staff can manage products, collections, homepage copy, published policies, and externally received orders.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Visual direction: youthful, clean, modern, trustworthy, and product-focused; warm white, blush, charcoal, restrained lavender and sage; readable and accessible.
+- Avoid clutter, emoji decoration, intrusive popups, unnecessary motion, and claims the store has not verified.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Leave shipping and return terms, support contact, trust notes, and product catalogue empty until the store provides verified content.
+- A saved bag is not an order; checkout is unavailable and the site does not collect payment.
 
 ## Pointers
 

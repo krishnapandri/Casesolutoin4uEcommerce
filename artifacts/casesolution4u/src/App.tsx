@@ -77,6 +77,7 @@ import {
   Router as WouterRouter,
   useLocation,
   useParams,
+  useSearch,
 } from 'wouter';
 import './index.css';
 
@@ -184,19 +185,23 @@ function QueryState({ loading, error, retry, children }: { loading: boolean; err
 }
 function AdminQueryState({ loading, error, errorValue, retry, children }: { loading: boolean; error: boolean; errorValue: unknown; retry: () => void; children: React.ReactNode }) {
   const apiError = errorValue as { status?: number; message?: string } | undefined;
-  if (error && (apiError?.status === 401 || apiError?.status === 403 || /staff.*not configured|allowlist/i.test(apiError?.message || ''))) {
+  if (error && (apiError?.status === 503 || /staff.*not configured|allowlist/i.test(apiError?.message || ''))) {
     return <div className="staff-config-state"><div className="state-mark"><LockKeyhole size={20} /></div><div><h2>Staff access not configured</h2><p>Signing in is not enough to grant staff access. The server staff allowlist needs to be configured before this workspace can be used.</p></div></div>;
+  }
+  if (error && (apiError?.status === 401 || apiError?.status === 403)) {
+    return <div className="staff-config-state"><div className="state-mark"><LockKeyhole size={20} /></div><div><h2>Staff access required</h2><p>This account isn’t authorized for staff tools. Sign in with an allowlisted team account, or return to the store.</p><Link className="button-secondary" href="/">Back to the store</Link></div></div>;
   }
   return <QueryState loading={loading} error={error} retry={retry}>{children}</QueryState>;
 }
 
 function Header() {
   const cart = useCart();
+  const home = useGetHomeContent();
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState('');
   const [mobile, setMobile] = useState(false);
   return <>
-    <div className="announcement"><span>Good things for the phone you take everywhere.</span><Link href="/products">Browse the edit <ArrowRight size={13} /></Link></div>
+    {home.data?.announcement && <div className="announcement"><span>{home.data.announcement}</span></div>}
     <header className="store-header">
       <div className="page-wrap header-inner">
         <button className="mobile-menu icon-button" aria-label="Open navigation" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}><Menu size={21} /></button>
@@ -219,6 +224,7 @@ function Header() {
   </>;
 }
 function Footer() {
+  const home = useGetHomeContent();
   const [email, setEmail] = useState('');
   const [result, setResult] = useState('');
   const subscribe = useSubscribeNewsletter();
@@ -226,6 +232,7 @@ function Footer() {
     <div className="page-wrap footer-main">
       <div className="footer-brand"><Link href="/" className="brand"><span className="brand-symbol">c<span>4</span></span><span className="brand-word">case<span>solution</span><b>4U</b></span></Link><p>Little details. A little more you.</p><p className="footer-note">Thoughtful phone accessories for everyday life.</p></div>
       <div><p className="footer-title">Explore</p><Link href="/products">Shop all</Link><Link href="/#collections">Collections</Link><Link href="/#find-model">Find your model</Link></div>
+      <div className="footer-help"><p className="footer-title">Help & policies</p><Link href="/help#faq">FAQs</Link><Link href="/help#shipping">Shipping information</Link><Link href="/help#returns">Returns information</Link>{home.data?.supportEmail ? <a href={`mailto:${home.data.supportEmail}`}>{home.data.supportEmail}</a> : <span className="footer-unpublished">Support contact not published yet</span>}</div>
       <div><p className="footer-title">Your account</p><Link href="/sign-in">Sign in</Link><Link href="/sign-up">Create account</Link><Link href="/admin">Staff sign in</Link></div>
       <form className="newsletter" onSubmit={(e) => { e.preventDefault(); subscribe.mutate({ data: { email } }, { onSuccess: (r) => setResult(r.message), onError: () => setResult('We couldn’t subscribe you just now. Please try again.') }); }}>
         <p className="footer-title">A little note from us</p><p>New collections, when they arrive. No noise.</p><div className="newsletter-input"><input aria-label="Email address for updates" type="email" required placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} /><button aria-label="Subscribe" disabled={subscribe.isPending}><ArrowRight size={17} /></button></div>{result && <span className="newsletter-result" role="status">{result}</span>}
@@ -286,8 +293,6 @@ function HomePage() {
   const brands = [...new Set((devices.data || []).map((d) => d.brand))];
   const models = (devices.data || []).filter((d) => !brand || d.brand === brand);
   return <StoreLayout>
-    {home.data?.announcement && <div className="home-announcement"><span>{home.data.announcement}</span></div>}
-    {home.isError && <div className="home-announcement home-error" role="status">The latest store notes didn’t load. <button onClick={() => void home.refetch()}>Try again</button></div>}
     <main>
       <section className="hero page-wrap">
         <div className="hero-content"><span className="eyebrow hero-eyebrow"><span className="eyebrow-rule" /> A little more you, every day</span><h1 className="display">Your phone.<br /><em>Your style.</em></h1><p>Find the small things that make your everyday feel a little more like yours.</p><div className="hero-actions"><Link className="button-primary" href="/products">Shop Now <ArrowRight size={17} /></Link><Link className="hero-text-link" href="/#find-model">Find your phone model <ArrowDown size={15} /></Link></div><div className="hero-quiet-note"><span className="hero-dot" /> Made for your everyday carry</div></div>
@@ -297,7 +302,7 @@ function HomePage() {
         </div>
         <span className="hero-side-note">Carry what feels like you</span>
       </section>
-      <section className="trust-strip page-wrap" aria-label="Store information">{(home.data?.trustItems?.length ? home.data.trustItems : ['Thoughtful finds', 'Easy to explore', 'Choose by phone model']).map((item, i) => <div className="trust-item" key={`${item}-${i}`}><span className="trust-number">0{i + 1}</span><span>{item}</span></div>)}</section>
+      {!!home.data?.trustItems?.length && <section className="trust-strip page-wrap" aria-label="Store information">{home.data.trustItems.map((item, i) => <div className="trust-item" key={`${item}-${i}`}><span className="trust-number">{String(i + 1).padStart(2, '0')}</span><span>{item}</span></div>)}</section>}
       <section className="device-finder page-wrap" id="find-model">
         <div className="finder-note"><span className="eyebrow">Start with your phone</span><h2 className="display">Begin with<br />your device.</h2><p>Choose your device and we’ll narrow the shop down to listed compatibility.</p></div>
         <form className="finder-form" onSubmit={(e) => { e.preventDefault(); setLocation(`/products?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`); }}>
@@ -309,7 +314,7 @@ function HomePage() {
       </section>
       <section className="collection-section page-wrap" id="collections">
         <div className="section-heading"><div><span className="eyebrow">Find your kind of thing</span><h2 className="display">A collection for every mood.</h2></div><Link href="/products" className="arrow-link">Explore everything <ArrowUpRight size={17} /></Link></div>
-        <QueryState loading={collections.isLoading} error={collections.isError} retry={() => void collections.refetch()}>{collections.data?.length ? <div className="collection-tiles">{collections.data.slice(0, 3).map((collection, index) => <CollectionTile collection={collection} index={index} key={collection.id} />)}</div> : <div className="soft-empty">New collections will find their way here soon.</div>}</QueryState>
+        <QueryState loading={collections.isLoading} error={collections.isError} retry={() => void collections.refetch()}>{collections.data?.length ? <div className="collection-tiles">{collections.data.map((collection, index) => <CollectionTile collection={collection} index={index} key={collection.id} />)}</div> : <div className="soft-empty">New collections will find their way here soon.</div>}</QueryState>
       </section>
       <section className="featured-section">
         <div className="page-wrap">
@@ -322,6 +327,25 @@ function HomePage() {
     </main>
   </StoreLayout>;
 }
+function HelpPage() {
+  const home = useGetHomeContent();
+  return <StoreLayout><main className="page-wrap help-page">
+    <div className="breadcrumbs"><Link href="/">Home</Link><span>/</span><span>Help & policies</span></div>
+    <header className="help-heading"><span className="eyebrow">Here when you need us</span><h1 className="display">A few helpful things.</h1><p>Clear information about browsing the catalogue and the store details that have been published.</p></header>
+    <section className="help-faq" id="faq"><span className="eyebrow">Frequently asked questions</span><h2 className="display">Good to know.</h2>
+      <article><h3>How do I find a case for my phone?</h3><p>Use the brand and model finder on the homepage, or check the compatibility information listed on each product page. If your exact model is not shown, that compatibility has not been provided in the catalogue.</p></article>
+      <article><h3>Can I check out or pay on this website?</h3><p>No. This website lets you browse products and save a bag, but online checkout and payment are not available.</p></article>
+      <article><h3>Where can I read store policies?</h3><p>Published shipping and returns information is shown below. If a section says it has not been published, please don’t assume terms that are not shown here.</p></article>
+    </section>
+    <section className="help-policies" aria-label="Store policies">
+      <QueryState loading={home.isLoading} error={home.isError} retry={() => void home.refetch()}>
+        <article className="help-policy" id="shipping"><span className="eyebrow">Shipping</span><h2>Shipping information</h2>{home.data?.shippingPolicy ? <p className="policy-copy">{home.data.shippingPolicy}</p> : <p className="policy-unpublished">Shipping information has not been published yet.</p>}</article>
+        <article className="help-policy" id="returns"><span className="eyebrow">Returns</span><h2>Returns information</h2>{home.data?.returnsPolicy ? <p className="policy-copy">{home.data.returnsPolicy}</p> : <p className="policy-unpublished">Returns information has not been published yet.</p>}</article>
+        <article className="help-policy" id="support"><span className="eyebrow">Support</span><h2>Contact</h2>{home.data?.supportEmail ? <p>For help, email <a href={`mailto:${home.data.supportEmail}`}>{home.data.supportEmail}</a>.</p> : <p className="policy-unpublished">A support contact has not been published yet.</p>}</article>
+      </QueryState>
+    </section>
+  </main></StoreLayout>;
+}
 function CollectionTile({ collection, index }: { collection: Collection; index: number }) {
   return <Link href={`/collections/${collection.slug}`} className={`collection-tile collection-tile-${index + 1}`}>
     {collection.imageUrl ? <img src={collection.imageUrl} alt={collection.imageAlt || collection.name} loading="lazy" /> : <div className="collection-art"><span className="collection-art-ring" /><span className="collection-art-pill" /><span className="collection-art-spark" /></div>}
@@ -330,7 +354,8 @@ function CollectionTile({ collection, index }: { collection: Collection; index: 
 }
 
 function CatalogPage() {
-  const params = new URLSearchParams(window.location.search);
+  const searchParams = useSearch();
+  const params = new URLSearchParams(searchParams);
   const [search, setSearch] = useState(params.get('q') || '');
   const [brand, setBrand] = useState(params.get('brand') || '');
   const [model, setModel] = useState(params.get('model') || '');
@@ -338,6 +363,20 @@ function CatalogPage() {
   const [featured, setFeatured] = useState(params.get('featured') === 'true');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState({ q: search || undefined, brand: brand || undefined, model: model || undefined, collection: collection || undefined, featured: featured ? true : undefined, limit: 60 });
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const nextSearch = next.get('q') || '';
+    const nextBrand = next.get('brand') || '';
+    const nextModel = next.get('model') || '';
+    const nextCollection = next.get('collection') || '';
+    const nextFeatured = next.get('featured') === 'true';
+    setSearch(nextSearch);
+    setBrand(nextBrand);
+    setModel(nextModel);
+    setCollection(nextCollection);
+    setFeatured(nextFeatured);
+    setQuery({ q: nextSearch || undefined, brand: nextBrand || undefined, model: nextModel || undefined, collection: nextCollection || undefined, featured: nextFeatured ? true : undefined, limit: 60 });
+  }, [searchParams]);
   const products = useListProducts(query);
   const devices = useListDevices();
   const collections = useListCollections();
@@ -434,11 +473,14 @@ function AdminOverview() {
   const products = useListAdminProducts();
   const orders = useListAdminOrders();
   const health = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey() } });
-  const isConfigError = [summary.error, products.error, orders.error].some((err) => {
+  const adminErrors = [summary.error, products.error, orders.error];
+  const accessError = adminErrors.find((err) => {
     const e = err as { status?: number; message?: string } | undefined;
-    return e?.status === 401 || e?.status === 403 || /staff.*not configured|allowlist/i.test(e?.message || '');
+    return e?.status === 401 || e?.status === 403 || e?.status === 503 || /staff.*not configured|allowlist/i.test(e?.message || '');
   });
-  return <AdminFrame title="A clear view of the shop." subtitle="The practical bits, all in one place."><QueryState loading={summary.isLoading} error={summary.isError && !isConfigError} retry={() => void summary.refetch()}>{isConfigError ? <div className="staff-config-state"><div className="state-mark"><LockKeyhole size={20} /></div><div><h2>Staff access not configured</h2><p>Signing in is not enough to grant staff access. The server staff allowlist needs to be configured before this workspace can be used.</p></div></div> : <>
+  const errorValue = accessError || summary.error || products.error || orders.error;
+  const hasError = summary.isError || products.isError || orders.isError;
+  return <AdminFrame title="A clear view of the shop." subtitle="The practical bits, all in one place."><AdminQueryState loading={summary.isLoading || products.isLoading || orders.isLoading} error={hasError} errorValue={errorValue} retry={() => { void summary.refetch(); void products.refetch(); void orders.refetch(); }}>{<>
     <div className="summary-grid">{[
       { label: 'Products in the catalogue', value: summary.data?.productCount ?? 0, detail: 'All listed and draft products', tone: 'rose' },
       { label: 'Running low', value: summary.data?.lowStockCount ?? 0, detail: 'Products needing a stock check', tone: 'sage' },
@@ -448,7 +490,7 @@ function AdminOverview() {
     <div className="overview-grid"><section className="admin-panel"><div className="panel-heading"><div><span className="eyebrow">Connection</span><h2>Store status</h2></div><span className={`status-pill ${health.isSuccess ? 'status-good' : 'status-warn'}`}><i />{health.isSuccess ? 'Online' : health.isLoading ? 'Checking' : 'Unavailable'}</span></div><p className="panel-copy">The storefront API is {health.isSuccess ? 'responding.' : health.isLoading ? 'being checked.' : 'not responding at the moment.'} This is a connection check, not an authorization check.</p></section>
     <section className="admin-panel"><div className="panel-heading"><div><span className="eyebrow">Useful next steps</span><h2>Keep things current</h2></div></div><div className="admin-shortcuts"><Link href="/admin/products"><span><Package size={17} /></span>Manage products<ArrowRight size={15} /></Link><Link href="/admin/collections"><span><Sparkles size={17} /></span>Shape collections<ArrowRight size={15} /></Link><Link href="/admin/homepage"><span><SlidersHorizontal size={17} /></span>Refresh homepage copy<ArrowRight size={15} /></Link><Link href="/admin/orders"><span><ShoppingBag size={17} /></span>Record an order<ArrowRight size={15} /></Link></div></section></div>
     <section className="admin-panel overview-note"><span className="eyebrow">A note on orders</span><p>Orders shown here are recorded by staff after being received outside this website. The storefront does not collect payment or submit orders.</p></section>
-  </>}</QueryState></AdminFrame>;
+  </>}</AdminQueryState></AdminFrame>;
 }
 
 function ProductForm({ product, onClose }: { product?: AdminProduct; onClose: () => void }) {
@@ -544,13 +586,17 @@ function AdminHomepage() {
   const update = useUpdateHomeContent();
   const client = useQueryClient();
   const [announcement, setAnnouncement] = useState('');
+  const [shippingPolicy, setShippingPolicy] = useState('');
+  const [returnsPolicy, setReturnsPolicy] = useState('');
+  const [supportEmail, setSupportEmail] = useState('');
   const [trustItems, setTrustItems] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
-  useEffect(() => { if (query.data && !ready) { setAnnouncement(query.data.announcement || ''); setTrustItems(query.data.trustItems); setReady(true); } }, [query.data, ready]);
-  return <AdminFrame title="Homepage" subtitle="Set the short pieces of copy that greet people at the door."><AdminQueryState loading={query.isLoading} error={query.isError} errorValue={query.error} retry={() => void query.refetch()}><form className="admin-panel content-editor" onSubmit={(e) => { e.preventDefault(); update.mutate({ data: { announcement: announcement.trim() || null, trustItems: trustItems.map((x) => x.trim()).filter(Boolean) } }, { onSuccess: () => { void client.invalidateQueries({ queryKey: getGetAdminHomeContentQueryKey() }); void client.invalidateQueries({ queryKey: getGetHomeContentQueryKey() }); }, onError: () => window.alert('We couldn’t save the homepage content.') }); }}>
-    <div className="panel-heading"><div><span className="eyebrow">Storefront copy</span><h2>First things first</h2></div></div><label>Announcement, optional<input className="field" maxLength={160} value={announcement} onChange={(e) => setAnnouncement(e.target.value)} placeholder="A short, honest note at the top of the page" /></label>
-    <div className="trust-item-editor"><div><h3>Small notes of reassurance</h3><p>These appear below the homepage introduction.</p></div>{trustItems.map((item, i) => <label key={i}>Note {i + 1}<div className="trust-edit-line"><input className="field" maxLength={100} value={item} onChange={(e) => setTrustItems((v) => v.map((x, index) => index === i ? e.target.value : x))} /><button type="button" className="icon-button" aria-label={`Remove note ${i + 1}`} onClick={() => setTrustItems((v) => v.filter((_, index) => index !== i))}><X size={17} /></button></div></label>)}<button type="button" className="button-secondary add-note" disabled={trustItems.length >= 8} onClick={() => setTrustItems((v) => [...v, ''])}><Plus size={15} /> Add a note</button></div>
-    <div className="admin-form-footer"><span>Changes appear on the public homepage.</span><button className="button-primary" disabled={update.isPending}>{update.isPending && <LoaderCircle size={15} className="spin" />}Save homepage copy</button></div>
+  useEffect(() => { if (query.data && !ready) { setAnnouncement(query.data.announcement || ''); setShippingPolicy(query.data.shippingPolicy || ''); setReturnsPolicy(query.data.returnsPolicy || ''); setSupportEmail(query.data.supportEmail || ''); setTrustItems(query.data.trustItems); setReady(true); } }, [query.data, ready]);
+  return <AdminFrame title="Homepage & policies" subtitle="Publish store information only after confirming it is accurate."><AdminQueryState loading={query.isLoading} error={query.isError} errorValue={query.error} retry={() => void query.refetch()}><form className="admin-panel content-editor" onSubmit={(e) => { e.preventDefault(); update.mutate({ data: { announcement: announcement.trim() || null, shippingPolicy: shippingPolicy.trim() || null, returnsPolicy: returnsPolicy.trim() || null, supportEmail: supportEmail.trim() || null, trustItems: trustItems.map((x) => x.trim()).filter(Boolean) } }, { onSuccess: () => { void client.invalidateQueries({ queryKey: getGetAdminHomeContentQueryKey() }); void client.invalidateQueries({ queryKey: getGetHomeContentQueryKey() }); }, onError: () => window.alert('We couldn’t save the homepage content.') }); }}>
+    <div className="panel-heading"><div><span className="eyebrow">Storefront copy</span><h2>First things first</h2></div></div><label>Announcement, optional<input className="field" maxLength={160} value={announcement} onChange={(e) => setAnnouncement(e.target.value)} placeholder="A short, accurate note at the top of the page" /></label>
+    <div className="trust-item-editor"><div><h3>Store policies & support</h3><p>Leave a field blank until the details are confirmed. These are shown publicly on the help page.</p></div><label>Shipping information, optional<textarea className="field form-textarea" rows={5} value={shippingPolicy} onChange={(e) => setShippingPolicy(e.target.value)} placeholder="Published shipping terms" /></label><label>Returns information, optional<textarea className="field form-textarea" rows={5} value={returnsPolicy} onChange={(e) => setReturnsPolicy(e.target.value)} placeholder="Published return terms" /></label><label>Support email, optional<input className="field" type="email" maxLength={254} value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} placeholder="support@example.com" /></label></div>
+    <div className="trust-item-editor"><div><h3>Verified store notes</h3><p>Only add statements that are confirmed for this store. These appear below the homepage introduction.</p></div>{trustItems.map((item, i) => <label key={i}>Note {i + 1}<div className="trust-edit-line"><input className="field" maxLength={100} value={item} onChange={(e) => setTrustItems((v) => v.map((x, index) => index === i ? e.target.value : x))} /><button type="button" className="icon-button" aria-label={`Remove note ${i + 1}`} onClick={() => setTrustItems((v) => v.filter((_, index) => index !== i))}><X size={17} /></button></div></label>)}<button type="button" className="button-secondary add-note" disabled={trustItems.length >= 8} onClick={() => setTrustItems((v) => [...v, ''])}><Plus size={15} /> Add a note</button></div>
+    <div className="admin-form-footer"><span>Changes appear on the public homepage and help page.</span><button className="button-primary" disabled={update.isPending}>{update.isPending && <LoaderCircle size={15} className="spin" />}Save homepage & policy copy</button></div>
   </form></AdminQueryState></AdminFrame>;
 }
 function AdminOrders() {
@@ -603,6 +649,7 @@ function RoutedErrorBoundary({ children }: { children: React.ReactNode }) {
 function Router() {
   return <RoutedErrorBoundary><Switch>
     <Route path="/" component={HomePage} />
+    <Route path="/help" component={HelpPage} />
     <Route path="/products" component={CatalogPage} />
     <Route path="/products/:slug" component={ProductPage} />
     <Route path="/collections/:slug" component={CollectionPage} />
